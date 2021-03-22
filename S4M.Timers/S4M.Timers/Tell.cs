@@ -10,12 +10,12 @@ namespace S4M.Timers
     {
         private static readonly ConcurrentDictionary<Guid, Task> PendingTasks = new();
 
-        public static ICancelable Once(TimeSpan delay, IStateMachine receiver, object message)
+        public static ICancelable Once(TimeSpan delay, ICanTellAsync receiver, object message)
         {
             return Once(delay, receiver, () => message);
         }
 
-        public static ICancelable Once(TimeSpan delay, IStateMachine receiver, Func<object> getMessage)
+        public static ICancelable Once(TimeSpan delay, ICanTellAsync receiver, Func<object> getMessage)
         {
             var cts = new CancellationAdapter(new CancellationTokenSource());
             var taskId = Guid.NewGuid();
@@ -35,13 +35,13 @@ namespace S4M.Timers
             return cts;
         }
 
-        public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, IStateMachine receiver,
+        public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTellAsync receiver,
             object message)
         {
             return Repeatedly(initialDelay, interval, receiver, () => message);
         }
 
-        public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, IStateMachine receiver,
+        public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTellAsync receiver,
             Func<object> getMessage)
         {
             var cts = new CancellationAdapter(new CancellationTokenSource());

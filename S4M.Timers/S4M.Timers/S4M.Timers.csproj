@@ -12,13 +12,13 @@
         <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
         <PackageTags>fsm finitestatemachines s4m</PackageTags>
         <RepositoryUrl>https://github.com/philiplaureano/S4M.Timers</RepositoryUrl>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Laureano.S4M.Core" Version="1.0.1" />
+      <PackageReference Include="Laureano.S4M.Core" Version="1.0.2" />
     </ItemGroup>
 
 </Project>
