@@ -8,7 +8,7 @@ namespace S4M.Timers
 {
     public static class Tell
     {
-        private static readonly ConcurrentDictionary<Guid, Task> PendingTasks = new();
+        private static readonly ConcurrentDictionary<Guid, IDisposable> PendingTimers = new();
 
         public static ICancelable Once(TimeSpan delay, ICanTellAsync receiver, object message)
         {
@@ -17,22 +17,28 @@ namespace S4M.Timers
 
         public static ICancelable Once(TimeSpan delay, ICanTellAsync receiver, Func<object> getMessage)
         {
-            var cts = new CancellationAdapter(new CancellationTokenSource());
+            var cts = new CancellationTokenSource();
             var taskId = Guid.NewGuid();
-            var timerTask = Task.Run(async () =>
-            {
-                // Pause and call the state machine
-                await Task.Delay(delay, cts.Token);
 
+            void OnCallback()
+            {
+                // Run the task only once
                 var message = getMessage();
-                await receiver.TellAsync(message, cts.Token);
+                Task.WaitAny(receiver.TellAsync(message, cts.Token));
 
                 // Clean up the task itself
-                PendingTasks.TryRemove(taskId, out _);
-            });
+                if (PendingTimers.ContainsKey(taskId))
+                {
+                    PendingTimers[taskId]?.Dispose();
+                    PendingTimers.TryRemove(taskId, out _);    
+                }
+            }
 
-            PendingTasks[taskId] = timerTask;
-            return cts;
+            Action timerTask = OnCallback;
+            var pendingTimer = timerTask.RepeatEvery(delay, TimeSpan.Zero);
+
+            PendingTimers[taskId] = pendingTimer;
+            return new TimerCancellationAdapter(cts, pendingTimer);
         }
 
         public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTellAsync receiver,
@@ -44,27 +50,28 @@ namespace S4M.Timers
         public static ICancelable Repeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTellAsync receiver,
             Func<object> getMessage)
         {
-            var cts = new CancellationAdapter(new CancellationTokenSource());
+            var cts = new CancellationTokenSource();
             var taskId = Guid.NewGuid();
 
-            var timerTask = Task.Run(async () =>
+            void OnCallback()
             {
-                // Pause using the initial delay 
-                await Task.Delay(initialDelay, cts.Token);
-                while (!cts.IsCancellationRequested)
+                // Clean up the task after it has been cancelled
+                if (PendingTimers.ContainsKey(taskId) && cts.IsCancellationRequested)
                 {
-                    // Call the state machine itself and pause using the interval
-                    var message = getMessage();
-                    await receiver.TellAsync(message, cts.Token);
-                    await Task.Delay(interval, cts.Token);
+                    PendingTimers[taskId]?.Dispose();
+                    PendingTimers.TryRemove(taskId, out _);
+                    return;
                 }
+                
+                var message = getMessage();
+                Task.WaitAny(receiver.TellAsync(message, cts.Token));
+            }
 
-                // Clean up the task itself
-                PendingTasks.TryRemove(taskId, out _);
-            });
+            Action timerTask = OnCallback;
+            var pendingTimer = timerTask.RepeatEvery(initialDelay, interval);
 
-            PendingTasks[taskId] = timerTask;
-            return cts;
+            PendingTimers[taskId] = pendingTimer;
+            return new TimerCancellationAdapter(cts, pendingTimer);
         }
     }
 }

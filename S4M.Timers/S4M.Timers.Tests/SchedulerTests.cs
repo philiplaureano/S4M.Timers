@@ -62,7 +62,7 @@ namespace S4M.Timers.Tests
             Assert.True(numberOfExpectedCalls > 15);
 
             A.CallTo(() => receiver.TellAsync(message, A<CancellationToken>.Ignored))
-                .MustHaveHappened(numberOfExpectedCalls, Times.OrLess);
+                .MustHaveHappened(numberOfExpectedCalls, Times.OrMore);
         }
     }
 }
