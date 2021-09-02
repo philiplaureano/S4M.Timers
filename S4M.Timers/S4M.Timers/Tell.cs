@@ -8,7 +8,7 @@ namespace S4M.Timers
 {
     public static class Tell
     {
-        private static readonly ConcurrentDictionary<Guid, IDisposable> PendingTimers = new();
+        private static readonly ConcurrentDictionary<Guid, IDisposable> PendingTimers = new ConcurrentDictionary<Guid, IDisposable>();
 
         public static ICancelable Once(TimeSpan delay, ICanTellAsync receiver, object message)
         {

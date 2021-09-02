@@ -11,8 +11,10 @@ namespace S4M.Timers
 
         public static TimeSpan Nanoseconds(this int value)
         {
-            return value.Milliseconds() / 1000000;
+            var valueInMilliseconds = Convert.ToDouble(value) / 1000000d;
+            return TimeSpan.FromMilliseconds(valueInMilliseconds);
         }
+
         public static TimeSpan Milliseconds(this int value)
         {
             return TimeSpan.FromMilliseconds(value);
@@ -40,22 +42,22 @@ namespace S4M.Timers
 
         public static TimeSpan Weeks(this int value)
         {
-            return value.Days() * 7;
+            return TimeSpan.FromDays(value * 7);
         }
 
         public static TimeSpan Months(this int value)
         {
-            return value.Weeks() * 4;
+            return TimeSpan.FromDays(value * 30);
         }
 
         public static TimeSpan Quarters(this int value)
         {
-            return value.Months() * 3;
+            return TimeSpan.FromDays(30 * value * 3);
         }
 
         public static TimeSpan Years(this int value)
         {
-            return value.Days() * 365;
+            return TimeSpan.FromDays(value * 365);
         }
     }
 }
